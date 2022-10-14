@@ -1,5 +1,6 @@
+include Fiddle, Win32
+
 def prompt(title, text, wintype=0x1|0x20)
-    include Fiddle
     messageboxw = Function.new \
         dlopen('user32')['MessageBoxW'],
         [TYPE_VOIDP, TYPE_CONST_STRING, TYPE_CONST_STRING, TYPE_UINTPTR_T],
@@ -14,7 +15,6 @@ THEME_NAMES = {
     1 => "light"
 }
 
-include Win32
 ACCESS = Registry::KEY_READ | Registry::KEY_SET_VALUE
 SUBKEY = %q(SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize)
 
