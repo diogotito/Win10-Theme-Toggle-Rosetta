@@ -1,27 +1,31 @@
 import ctypes
-from winreg import (HKEY_CURRENT_USER, KEY_ALL_ACCESS, ConnectRegistry,
-                    OpenKey, QueryValueEx, SetValueEx)
+from winreg import (HKEY_CURRENT_USER, KEY_QUERY_VALUE, KEY_SET_VALUE,
+                    ConnectRegistry, OpenKey, QueryValueEx, SetValueEx)
 
 
-def prompt(text, title="", boxtype=0x1 | 0x40):
-    """Shows a dialog box with Ok and Cancel buttons.
-    Returns True if the user activated the Ok button."""
+def prompt(text="", title="", boxtype=0x1 | 0x20):
     choice = ctypes.windll.user32.MessageBoxW(0, str(text), str(title), boxtype)
     return choice == 1
 
 
-if __name__ == "__main__":
+def toggle_theme():
     THEME_NAMES = ["Dark", "Light"]
-    HKCU = ConnectRegistry(None, HKEY_CURRENT_USER)
     PERSONALIZE_KEY = r"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize"
     APPS_USE_LIGHT_THEME = "AppsUseLightTheme"
+    ACCESS = KEY_QUERY_VALUE | KEY_SET_VALUE
 
-    # Get the preference
-    Personalize = OpenKey(HKCU, PERSONALIZE_KEY, 0, KEY_ALL_ACCESS)
-    (v, t) = QueryValueEx(Personalize, APPS_USE_LIGHT_THEME)
+    with (
+        ConnectRegistry(None, HKEY_CURRENT_USER) as HKCU,
+        OpenKey(HKCU, PERSONALIZE_KEY, 0, ACCESS) as Personalize,
+    ):
+        v, t = QueryValueEx(Personalize, APPS_USE_LIGHT_THEME)
 
-    # Prompt the user
-    text = f"Toggle from {THEME_NAMES[v]} to {THEME_NAMES[1 - v]} theme?"
-    if prompt(text=text, title="toggle_darkmode.py"):
-        # Toggle the preference
-        SetValueEx(Personalize, APPS_USE_LIGHT_THEME, 0, t, 1 - v)
+        if prompt(
+            text=f"Toggle from {THEME_NAMES[v]} to {THEME_NAMES[1 - v]} theme?",
+            title="toggle_darkmode.py",
+        ):
+            SetValueEx(Personalize, APPS_USE_LIGHT_THEME, 0, t, 1 - v)
+
+
+if __name__ == "__main__":
+    toggle_theme()
